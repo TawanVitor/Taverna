@@ -36,20 +36,21 @@ export default function LoginPage() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '1.5rem',
-      background: 'radial-gradient(ellipse at 50% 30%, #1a1208 0%, #0c0a08 65%)',
+      background: 'radial-gradient(ellipse at 50% 30%, #072914 0%, #000000 65%)',
     }}>
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <div style={{
           width: 72, height: 72, borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, #e8b84b, #7a5510)',
+          background: 'radial-gradient(circle at 35% 35%, #ffd000, #000000)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 28, margin: '0 auto 1rem',
-          boxShadow: '0 0 40px rgba(200,150,40,0.25)',
-        }}>🐙</div>
-        <h1 style={{ marginBottom: '0.25rem' }}>Taverna</h1>
-        <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic' }}>
-          Call of Cthulhu — Gestão de Fichas
+          boxShadow: '0 0 40px rgba(9, 190, 79, 0.25)',
+        }}><img src="PNG.png" alt="logo" style={{ width: '500px', height: '45px', display: 'flex', marginBottom: '-0.4rem', marginRight: '-0.3rem' }} /></div>
+        <h1 style={{ marginBottom: '0.25rem' }}>Cosmos</h1>
+ 
+        <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic', }}>
+            Call of Cthulhu 
         </p>
       </div>
 
@@ -59,11 +60,13 @@ export default function LoginPage() {
         <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem' }}>
           <button
             className={`tab-btn${mode === 'login' ? ' active' : ''}`}
-            onClick={() => setMode('login')}
+            onClick={() => setMode('login')}style={{fontWeight: 'bold'}}
+            
           >Entrar</button>
           <button
             className={`tab-btn${mode === 'register' ? ' active' : ''}`}
             onClick={() => setMode('register')}
+            style={{fontWeight: 'bold'}}
           >Criar conta</button>
         </div>
 
@@ -97,16 +100,21 @@ export default function LoginPage() {
             style={{ marginTop: '0.5rem' }}
             disabled={loading}
           >
-            {loading ? '...' : mode === 'login' ? 'Entrar na taverna' : 'Criar conta gratuita'}
+            {loading ? '...' : mode === 'login' ? 'Voltar ao Cosmos' : 'Criar conta gratuita'}
           </button>
         </form>
 
         {mode === 'register' && (
-          <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'center' }}>
-            Após criar a conta, confirme seu e-mail para ativar o acesso.
+          <p style={{ marginTop: '1rem', fontSize: '0.7rem', color: 'var(--text-dim)', textAlign: 'center' }}>
+            Obrigado pro acessar o Cosmos! Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade.
           </p>
         )}
+        
       </div>
+      <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+            pardal ☆ 
+        </p>
     </div>
   )
+  
 }
