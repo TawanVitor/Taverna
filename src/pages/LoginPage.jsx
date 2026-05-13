@@ -46,7 +46,7 @@ export default function LoginPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 28, margin: '0 auto 1rem',
           boxShadow: '0 0 40px rgba(9, 190, 79, 0.25)',
-        }}><img src="PNG.png" alt="logo" style={{ width: '500px', height: '45px', display: 'flex', marginBottom: '-0.4rem', marginRight: '-0.3rem' }} /></div>
+        }}><img src="PNG.png" alt="logo" style={{ width: '500px', height: '45px', display: 'flex', marginBottom: '-0.2rem', marginRight: '-0.3rem' }} /></div>
         <h1 style={{ marginBottom: '0.25rem' }}>Cosmos</h1>
  
         <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic', }}>
