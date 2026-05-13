@@ -98,7 +98,7 @@ export default function LobbyPage({ onEnterSession }) {
   return (
     <div className="app-shell">
       <nav className="topnav">
-        <span className="topnav-title">🐙 Taverna</span>
+        <span className="topnav-title">Cosmos</span>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-md)' }}>{user.email}</span>
         <button className="btn btn-ghost" style={{ padding: '0.3rem 0.75rem', fontSize: '0.7rem' }} onClick={signOut}>
           Sair
