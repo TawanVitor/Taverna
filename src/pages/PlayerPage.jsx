@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { useToast } from '../components/Toast'
@@ -13,7 +13,9 @@ export default function PlayerPage({ session, onBack }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
-  const [tab, setTab] = useState('status') // 'status' | 'caract' | 'pericias'
+  const [tab, setTab] = useState('status')
+  const [confirmReset, setConfirmReset] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   useEffect(() => { loadChar() }, [session.id])
 
@@ -75,7 +77,27 @@ export default function PlayerPage({ session, onBack }) {
     setDirty(false)
   }
 
-  // Calcula esquivar e língua natural automaticamente
+  async function resetChar() {
+    if (!char) return
+    setResetting(true)
+    const resetFields = {
+      ...CHARACTER_DEFAULTS,
+      name: char.name,
+      occupation: char.occupation,
+    }
+    const { error } = await supabase
+      .from('characters')
+      .update(resetFields)
+      .eq('id', char.id)
+    setResetting(false)
+    if (error) { toast('Erro ao resetar: ' + error.message, 'error'); return }
+    setChar(prev => ({ ...prev, ...resetFields }))
+    setDirty(false)
+    setConfirmReset(false)
+    toast('Ficha resetada para os valores base!')
+  }
+
+  // Calculados automaticamente
   const esquivar = char ? Math.floor((char.des_destreza ?? 0) / 2) : 0
   const linguaNatural = char ? (char.edu_educacao ?? 0) : 0
 
@@ -85,11 +107,9 @@ export default function PlayerPage({ session, onBack }) {
     return char?.[p.key] ?? p.base
   }
 
-  function periciaClass(val, base) {
-    if (val >= base * 2) return 'above-half'
-    if (val <= Math.floor(base / 5)) return 'below-fifth'
-    return ''
-  }
+  // Divisões de sucesso
+  function sucessoDificil(val) { return Math.floor(val / 2) }
+  function sucessoExtremo(val) { return Math.floor(val / 5) }
 
   if (loading) return (
     <div className="app-shell">
@@ -125,9 +145,10 @@ export default function PlayerPage({ session, onBack }) {
       </nav>
 
       <div className="page">
+
         {/* Cabeçalho do personagem */}
         <div className="card" style={{ marginBottom: '1rem' }}>
-          <div className="grid-2" style={{ gap: '0.75rem' }}>
+          <div className="grid-2" style={{ gap: '0.75rem', marginBottom: '0.75rem' }}>
             <div className="field-row" style={{ marginBottom: 0 }}>
               <label>Nome do Investigador</label>
               <input
@@ -147,6 +168,35 @@ export default function PlayerPage({ session, onBack }) {
               />
             </div>
           </div>
+
+          {/* Botão resetar ficha */}
+          {!confirmReset ? (
+            <button
+              className="btn btn-danger"
+              style={{ fontSize: '0.7rem', padding: '0.35rem 0.875rem' }}
+              onClick={() => setConfirmReset(true)}
+            >
+              🔄 Resetar ficha
+            </button>
+          ) : (
+            <div style={{
+              background: 'var(--surface2)', border: '1px solid var(--red)',
+              borderRadius: 'var(--radius)', padding: '0.75rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+            }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-md)' }}>
+                Isso apagará todos os valores. Confirma?
+              </span>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }} onClick={() => setConfirmReset(false)}>
+                  Cancelar
+                </button>
+                <button className="btn btn-danger" style={{ fontSize: '0.7rem', padding: '0.3rem 0.75rem' }} onClick={resetChar} disabled={resetting}>
+                  {resetting ? '...' : 'Confirmar reset'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -238,37 +288,95 @@ export default function PlayerPage({ session, onBack }) {
         {/* ── TAB: PERÍCIAS ── */}
         {tab === 'pericias' && (
           <div>
+            {/* Legenda dos níveis de sucesso */}
+            <div style={{
+              display: 'flex', gap: 6, marginBottom: '0.875rem',
+              padding: '0.6rem 0.875rem',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', marginRight: 4 }}>Legenda:</span>
+              <span style={{ fontSize: '0.7rem', color: '#c9922a', fontFamily: 'var(--font-mono)' }}>Regular = valor cheio</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>·</span>
+              <span style={{ fontSize: '0.7rem', color: '#3498db', fontFamily: 'var(--font-mono)' }}>Difícil = ÷2</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>·</span>
+              <span style={{ fontSize: '0.7rem', color: '#8e44ad', fontFamily: 'var(--font-mono)' }}>Extremo = ÷5</span>
+            </div>
+
             {PERICIAS_GRUPOS.map(grupo => (
               <div key={grupo.grupo} className="card" style={{ marginBottom: '0.75rem' }}>
                 <div className="section-title">{grupo.grupo}</div>
+
+                {/* Cabeçalho das colunas */}
+                <div style={{
+                  display: 'flex', alignItems: 'center',
+                  padding: '0.2rem 0.5rem',
+                  marginBottom: '0.25rem',
+                  gap: '0.5rem',
+                }}>
+                  <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Perícia</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 52, textAlign: 'center' }}>Regular</span>
+                  <span style={{ fontSize: '0.65rem', color: '#3498db', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 44, textAlign: 'center' }}>Difícil</span>
+                  <span style={{ fontSize: '0.65rem', color: '#8e44ad', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 44, textAlign: 'center' }}>Extremo</span>
+                </div>
+
                 {grupo.pericias.map(p => {
                   const val = periciaDisplayVal(p)
+                  const dificil = sucessoDificil(val)
+                  const extremo = sucessoExtremo(val)
                   const isAuto = !!p.calculado
                   return (
-                    <div key={p.key} className="pericia-row">
-                      <span className="pericia-label">{p.label}</span>
-                      <span className="pericia-base">{p.base}%</span>
-                      {isAuto ? (
-                        <span className={`pericia-val ${periciaClass(val, p.base || 1)}`} style={{ color: 'var(--text-md)', fontStyle: 'italic' }}>
-                          {val}%
-                        </span>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <button
-                            className="stat-ctrl-btn"
-                            style={{ width: 22, height: 22, fontSize: '0.8rem' }}
-                            onClick={() => nudge(p.key, -1, 0, 99)}
-                          >−</button>
-                          <span className={`pericia-val ${periciaClass(val, p.base || 1)}`}>
-                            {val}%
-                          </span>
-                          <button
-                            className="stat-ctrl-btn"
-                            style={{ width: 22, height: 22, fontSize: '0.8rem' }}
-                            onClick={() => nudge(p.key, +1, 0, 99)}
-                          >+</button>
-                        </div>
-                      )}
+                    <div key={p.key} style={{
+                      display: 'flex', alignItems: 'center',
+                      padding: '0.35rem 0.5rem',
+                      borderRadius: 6,
+                      gap: '0.5rem',
+                      transition: 'background 0.12s',
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
+                      {/* Nome + controles */}
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                        {isAuto ? (
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</span>
+                        ) : (
+                          <>
+                            <button className="stat-ctrl-btn" style={{ width: 20, height: 20, fontSize: '0.75rem', flexShrink: 0 }} onClick={() => nudge(p.key, -1, 0, 99)}>−</button>
+                            <span style={{ fontSize: '0.9rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</span>
+                            <button className="stat-ctrl-btn" style={{ width: 20, height: 20, fontSize: '0.75rem', flexShrink: 0 }} onClick={() => nudge(p.key, +1, 0, 99)}>+</button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Sucesso Regular */}
+                      <div style={{
+                        minWidth: 52, textAlign: 'center',
+                        fontFamily: 'var(--font-mono)', fontSize: '0.9rem',
+                        fontWeight: 500, color: '#c9922a',
+                      }}>
+                        {val}%
+                      </div>
+
+                      {/* Sucesso Difícil */}
+                      <div style={{
+                        minWidth: 44, textAlign: 'center',
+                        fontFamily: 'var(--font-mono)', fontSize: '0.85rem',
+                        color: '#3498db',
+                      }}>
+                        {dificil}%
+                      </div>
+
+                      {/* Sucesso Extremo */}
+                      <div style={{
+                        minWidth: 44, textAlign: 'center',
+                        fontFamily: 'var(--font-mono)', fontSize: '0.85rem',
+                        color: '#8e44ad',
+                      }}>
+                        {extremo}%
+                      </div>
                     </div>
                   )
                 })}
