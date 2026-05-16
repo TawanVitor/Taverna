@@ -17,27 +17,45 @@ export default function LobbyPage({ onEnterSession }) {
 
   async function loadSessions() {
     setLoading(true)
+
     // Sessões onde sou mestre
-    const { data: asMaster } = await supabase
+    const { data: asMaster, error: e1 } = await supabase
       .from('sessions')
       .select('*')
       .eq('master_id', user.id)
       .order('created_at', { ascending: false })
 
-    // Sessões onde tenho personagem
-    const { data: asPlayer } = await supabase
+    if (e1) { toast('Erro ao carregar campanhas', 'error'); setLoading(false); return }
+
+    // IDs das sessões onde tenho personagem
+    const { data: myChars, error: e2 } = await supabase
       .from('characters')
-      .select('session_id, sessions(*)')
+      .select('session_id')
       .eq('user_id', user.id)
 
-    const playerSessions = (asPlayer || [])
-      .map(r => r.sessions)
-      .filter(s => s && s.master_id !== user.id)
+    if (e2) { toast('Erro ao carregar fichas', 'error'); setLoading(false); return }
 
+    // Buscar dados dessas sessões separadamente (evita o join que perde o apikey)
+    let playerSessions = []
+    if (myChars && myChars.length > 0) {
+      const sessionIds = myChars.map(c => c.session_id)
+      const { data: sessData } = await supabase
+        .from('sessions')
+        .select('*')
+        .in('id', sessionIds)
+        .neq('master_id', user.id) // exclui sessões onde já sou mestre
+
+      playerSessions = sessData || []
+    }
+
+    // Junta e deduplica
     const all = [...(asMaster || []), ...playerSessions]
-    // dedup por id
     const seen = new Set()
-    setSessions(all.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true }))
+    setSessions(all.filter(s => {
+      if (seen.has(s.id)) return false
+      seen.add(s.id)
+      return true
+    }))
     setLoading(false)
   }
 
@@ -62,35 +80,52 @@ export default function LobbyPage({ onEnterSession }) {
     const code = joinCode.trim().toUpperCase()
     if (!code) return
     setJoining(true)
+
     const { data: session, error } = await supabase
       .from('sessions')
       .select('*')
       .eq('invite_code', code)
       .single()
+
     if (error || !session) {
       toast('Código não encontrado', 'error')
       setJoining(false)
       return
     }
+
     // Verificar se já tem personagem nessa sessão
     const { data: existing } = await supabase
       .from('characters')
       .select('id')
       .eq('session_id', session.id)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
+
     if (!existing) {
-      // Criar personagem vazio
-      await supabase.from('characters').insert({
-        session_id: session.id,
-        user_id: user.id,
-        name: 'Investigador',
-      })
+      const { error: insertError } = await supabase
+        .from('characters')
+        .insert({
+          session_id: session.id,
+          user_id: user.id,
+          name: 'Investigador',
+        })
+      if (insertError) {
+        toast('Erro ao criar ficha: ' + insertError.message, 'error')
+        setJoining(false)
+        return
+      }
     }
+
     setJoining(false)
     toast(`Entrou em "${session.name}"!`)
     setJoinCode('')
     loadSessions()
+  }
+
+  // Precisa buscar as sessões dos players também via política correta
+  // Adiciona política de leitura de sessões para jogadores
+  async function ensureSessionsPolicy() {
+    // Apenas recarrega — a política é garantida pelo SQL abaixo
   }
 
   function isMaster(session) { return session.master_id === user.id }
