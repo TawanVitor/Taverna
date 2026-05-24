@@ -22,11 +22,8 @@ export default function PlayerPage({ session, onBack }) {
   async function loadChar() {
     setLoading(true)
     const { data, error } = await supabase
-      .from('characters')
-      .select('*')
-      .eq('session_id', session.id)
-      .eq('user_id', user.id)
-      .single()
+      .from('characters').select('*')
+      .eq('session_id', session.id).eq('user_id', user.id).single()
     if (error) toast('Erro ao carregar ficha', 'error')
     else setChar(data)
     setLoading(false)
@@ -34,11 +31,9 @@ export default function PlayerPage({ session, onBack }) {
 
   useEffect(() => {
     if (!char) return
-    const channel = supabase
-      .channel(`char-${char.id}`)
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${char.id}`,
-      }, payload => { setChar(payload.new); setDirty(false) })
+    const channel = supabase.channel(`char-${char.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${char.id}` },
+        payload => { setChar(payload.new); setDirty(false) })
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [char?.id])
@@ -48,9 +43,23 @@ export default function PlayerPage({ session, onBack }) {
     setDirty(true)
   }
 
+  // Para inputs numéricos: atualiza ao digitar, clamp ao sair do campo
+  function updateNum(key, raw, min = 0, max = 999) {
+    const val = raw === '' ? '' : parseInt(raw)
+    setChar(prev => ({ ...prev, [key]: val }))
+    setDirty(true)
+  }
+
+  function clampNum(key, min = 0, max = 999) {
+    setChar(prev => {
+      const v = parseInt(prev[key]) || min
+      return { ...prev, [key]: Math.max(min, Math.min(max, v)) }
+    })
+  }
+
   function nudge(key, delta, min = 0, max = 999) {
     setChar(prev => {
-      const next = Math.max(min, Math.min(max, (prev[key] ?? 0) + delta))
+      const next = Math.max(min, Math.min(max, (parseInt(prev[key]) || 0) + delta))
       return { ...prev, [key]: next }
     })
     setDirty(true)
@@ -60,7 +69,15 @@ export default function PlayerPage({ session, onBack }) {
     if (!char || !dirty) return
     setSaving(true)
     const { id, created_at, ...fields } = char
-    const { error } = await supabase.from('characters').update(fields).eq('id', id)
+    // Garante que todos os campos numéricos são inteiros válidos antes de salvar
+    const cleaned = { ...fields }
+    Object.keys(cleaned).forEach(k => {
+      if (typeof cleaned[k] === 'string' && cleaned[k] !== '' && !isNaN(cleaned[k])) {
+        cleaned[k] = parseInt(cleaned[k])
+      }
+      if (cleaned[k] === '') cleaned[k] = 0
+    })
+    const { error } = await supabase.from('characters').update(cleaned).eq('id', id)
     setSaving(false)
     if (error) { toast('Erro ao salvar: ' + error.message, 'error'); return }
     toast('Ficha salva!')
@@ -72,12 +89,9 @@ export default function PlayerPage({ session, onBack }) {
     setResetting(true)
     const resetFields = {
       ...CHARACTER_DEFAULTS,
-      name: char.name,
-      occupation: char.occupation,
-      age: char.age,
-      birthplace: char.birthplace,
-      sex: char.sex,
-      residence: char.residence,
+      name: char.name, occupation: char.occupation,
+      age: char.age, birthplace: char.birthplace,
+      sex: char.sex, residence: char.residence,
     }
     const { error } = await supabase.from('characters').update(resetFields).eq('id', char.id)
     setResetting(false)
@@ -85,16 +99,16 @@ export default function PlayerPage({ session, onBack }) {
     setChar(prev => ({ ...prev, ...resetFields }))
     setDirty(false)
     setConfirmReset(false)
-    toast('Ficha resetada para os valores base!')
+    toast('Ficha resetada!')
   }
 
-  const esquivar = char ? Math.floor((char.des_destreza ?? 0) / 2) : 0
-  const linguaNatural = char ? (char.edu_educacao ?? 0) : 0
+  const esquivar = char ? Math.floor((parseInt(char.des_destreza) || 0) / 2) : 0
+  const linguaNatural = char ? (parseInt(char.edu_educacao) || 0) : 0
 
-  function periciaDisplayVal(p) {
+  function periciaVal(p) {
     if (p.calculado === 'des/2') return esquivar
     if (p.calculado === 'edu') return linguaNatural
-    return char?.[p.key] ?? p.base
+    return parseInt(char?.[p.key]) || p.base
   }
 
   if (loading) return (
@@ -109,12 +123,8 @@ export default function PlayerPage({ session, onBack }) {
 
   if (!char) return (
     <div className="app-shell">
-      <nav className="topnav">
-        <button className="btn btn-ghost" onClick={onBack}>←</button>
-      </nav>
-      <div className="page" style={{ textAlign: 'center', paddingTop: '3rem', color: 'var(--text-md)' }}>
-        Ficha não encontrada.
-      </div>
+      <nav className="topnav"><button className="btn btn-ghost" onClick={onBack}>←</button></nav>
+      <div className="page" style={{ textAlign: 'center', paddingTop: '3rem', color: 'var(--text-md)' }}>Ficha não encontrada.</div>
     </div>
   )
 
@@ -131,8 +141,6 @@ export default function PlayerPage({ session, onBack }) {
       </nav>
 
       <div className="page">
-
-        {/* Tabs */}
         <div className="tabs">
           {[
             { key: 'info',     label: 'Informações' },
@@ -146,12 +154,11 @@ export default function PlayerPage({ session, onBack }) {
           ))}
         </div>
 
-        {/* ── TAB: INFORMAÇÕES ── */}
+        {/* ── INFORMAÇÕES ── */}
         {tab === 'info' && (
           <div>
             <div className="card" style={{ marginBottom: '0.75rem' }}>
               <div className="section-title">Dados do Investigador</div>
-
               <div className="grid-2" style={{ gap: '0.75rem' }}>
                 <div className="field-row">
                   <label>Nome</label>
@@ -163,27 +170,29 @@ export default function PlayerPage({ session, onBack }) {
                 </div>
                 <div className="field-row">
                   <label>Idade</label>
-                  <input type="number" value={char.age || ''} onChange={e => update('age', parseInt(e.target.value) || 0)} min={1} max={120} />
+                  <input
+                    type="number"
+                    className="stat-input"
+                    style={{ width: '100%', fontSize: '1rem' }}
+                    value={char.age ?? ''}
+                    onChange={e => updateNum('age', e.target.value, 1, 120)}
+                    onBlur={() => clampNum('age', 1, 120)}
+                    min={1} max={120}
+                  />
                 </div>
                 <div className="field-row">
                   <label>Sexo</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {['M', 'F'].map(s => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => update('sex', s)}
-                        style={{
-                          flex: 1, padding: '0.6rem',
-                          background: char.sex === s ? 'var(--surface3)' : 'var(--bg)',
-                          border: `1px solid ${char.sex === s ? 'var(--gold)' : 'var(--border)'}`,
-                          borderRadius: 'var(--radius)',
-                          color: char.sex === s ? 'var(--gold-lt)' : 'var(--text-md)',
-                          fontFamily: 'var(--font-display)',
-                          fontSize: '0.8rem', letterSpacing: '0.1em',
-                          cursor: 'pointer', transition: 'all 0.15s',
-                        }}
-                      >
+                      <button key={s} type="button" onClick={() => update('sex', s)} style={{
+                        flex: 1, padding: '0.6rem',
+                        background: char.sex === s ? 'var(--surface3)' : 'var(--bg)',
+                        border: `1px solid ${char.sex === s ? 'var(--gold)' : 'var(--border)'}`,
+                        borderRadius: 'var(--radius)',
+                        color: char.sex === s ? 'var(--gold-lt)' : 'var(--text-md)',
+                        fontFamily: 'var(--font-display)', fontSize: '0.8rem',
+                        letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.15s',
+                      }}>
                         {s === 'M' ? '♂ Masculino' : '♀ Feminino'}
                       </button>
                     ))}
@@ -200,7 +209,6 @@ export default function PlayerPage({ session, onBack }) {
               </div>
             </div>
 
-            {/* Botão resetar */}
             <div className="card">
               <div className="section-title">Zona de perigo</div>
               {!confirmReset ? (
@@ -208,21 +216,11 @@ export default function PlayerPage({ session, onBack }) {
                   🔄 Resetar ficha (valores base)
                 </button>
               ) : (
-                <div style={{
-                  background: 'var(--surface2)', border: '1px solid var(--red)',
-                  borderRadius: 'var(--radius)', padding: '0.75rem',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-                }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-md)' }}>
-                    Apaga todos os valores. Confirma?
-                  </span>
+                <div style={{ background: 'var(--surface2)', border: '1px solid var(--red)', borderRadius: 'var(--radius)', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-md)' }}>Apaga todos os valores. Confirma?</span>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                    <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }} onClick={() => setConfirmReset(false)}>
-                      Cancelar
-                    </button>
-                    <button className="btn btn-danger" style={{ fontSize: '0.7rem', padding: '0.3rem 0.75rem' }} onClick={resetChar} disabled={resetting}>
-                      {resetting ? '...' : 'Confirmar'}
-                    </button>
+                    <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }} onClick={() => setConfirmReset(false)}>Cancelar</button>
+                    <button className="btn btn-danger" style={{ fontSize: '0.7rem', padding: '0.3rem 0.75rem' }} onClick={resetChar} disabled={resetting}>{resetting ? '...' : 'Confirmar'}</button>
                   </div>
                 </div>
               )}
@@ -230,10 +228,10 @@ export default function PlayerPage({ session, onBack }) {
           </div>
         )}
 
-        {/* ── TAB: STATUS ── */}
+        {/* ── STATUS ── */}
         {tab === 'status' && STATUS.map(s => {
-          const cur = char[`${s.key}_atual`] ?? 0
-          const max = char[`${s.key}_max`] ?? 0
+          const cur = parseInt(char[`${s.key}_atual`]) || 0
+          const max = parseInt(char[`${s.key}_max`]) || 0
           const pct = max > 0 ? Math.round((cur / max) * 100) : 0
           return (
             <div key={s.key} className="card" style={{ marginBottom: '0.75rem' }}>
@@ -241,9 +239,7 @@ export default function PlayerPage({ session, onBack }) {
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.75rem', letterSpacing: '0.12em', color: 'var(--text-md)', textTransform: 'uppercase' }}>
                   {s.icon} {s.label}
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: s.color }}>
-                  {cur} / {max}
-                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: s.color }}>{cur} / {max}</span>
               </div>
               <div className="bar-track" style={{ marginBottom: '0.75rem' }}>
                 <div className="bar-fill" style={{ width: `${pct}%`, background: s.color }} />
@@ -252,16 +248,28 @@ export default function PlayerPage({ session, onBack }) {
                 <div style={{ flex: 1 }}>
                   <label>Atual</label>
                   <div className="stat-ctrl">
-                    <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_atual`, -1, 0, char[`${s.key}_max`] ?? 999)}>−</button>
-                    <span className="stat-ctrl-val">{cur}</span>
-                    <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_atual`, +1, 0, char[`${s.key}_max`] ?? 999)}>+</button>
+                    <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_atual`, -1, 0, parseInt(char[`${s.key}_max`]) || 999)}>−</button>
+                    <input
+                      type="number"
+                      className="stat-input"
+                      value={char[`${s.key}_atual`] ?? ''}
+                      onChange={e => updateNum(`${s.key}_atual`, e.target.value, 0, parseInt(char[`${s.key}_max`]) || 999)}
+                      onBlur={() => clampNum(`${s.key}_atual`, 0, parseInt(char[`${s.key}_max`]) || 999)}
+                    />
+                    <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_atual`, +1, 0, parseInt(char[`${s.key}_max`]) || 999)}>+</button>
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <label>Máximo</label>
                   <div className="stat-ctrl">
                     <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_max`, -1, 0)}>−</button>
-                    <span className="stat-ctrl-val">{max}</span>
+                    <input
+                      type="number"
+                      className="stat-input"
+                      value={char[`${s.key}_max`] ?? ''}
+                      onChange={e => updateNum(`${s.key}_max`, e.target.value, 0)}
+                      onBlur={() => clampNum(`${s.key}_max`, 0)}
+                    />
                     <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_max`, +1, 0)}>+</button>
                   </div>
                 </div>
@@ -270,7 +278,7 @@ export default function PlayerPage({ session, onBack }) {
           )
         })}
 
-        {/* ── TAB: ATRIBUTOS ── */}
+        {/* ── ATRIBUTOS ── */}
         {tab === 'caract' && (
           <div className="card">
             <div className="section-title">Características</div>
@@ -280,7 +288,14 @@ export default function PlayerPage({ session, onBack }) {
                   <label title={c.full}>{c.label} — {c.full}</label>
                   <div className="stat-ctrl">
                     <button className="stat-ctrl-btn" onClick={() => nudge(c.key, -1, 0, 99)}>−</button>
-                    <span className="stat-ctrl-val" style={{ color: 'var(--gold-lt)' }}>{char[c.key] ?? 0}</span>
+                    <input
+                      type="number"
+                      className="stat-input"
+                      value={char[c.key] ?? ''}
+                      onChange={e => updateNum(c.key, e.target.value, 0, 99)}
+                      onBlur={() => clampNum(c.key, 0, 99)}
+                      style={{ color: 'var(--gold-lt)' }}
+                    />
                     <button className="stat-ctrl-btn" onClick={() => nudge(c.key, +1, 0, 99)}>+</button>
                   </div>
                 </div>
@@ -295,15 +310,10 @@ export default function PlayerPage({ session, onBack }) {
           </div>
         )}
 
-        {/* ── TAB: PERÍCIAS ── */}
+        {/* ── PERÍCIAS ── */}
         {tab === 'pericias' && (
           <div>
-            <div style={{
-              display: 'flex', gap: 6, marginBottom: '0.875rem',
-              padding: '0.6rem 0.875rem',
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)', flexWrap: 'wrap',
-            }}>
+            <div style={{ display: 'flex', gap: 6, marginBottom: '0.875rem', padding: '0.6rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', marginRight: 4 }}>Legenda:</span>
               <span style={{ fontSize: '0.7rem', color: '#c9922a', fontFamily: 'var(--font-mono)' }}>Regular = valor cheio</span>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>·</span>
@@ -315,35 +325,53 @@ export default function PlayerPage({ session, onBack }) {
             {PERICIAS_GRUPOS.map(grupo => (
               <div key={grupo.grupo} className="card" style={{ marginBottom: '0.75rem' }}>
                 <div className="section-title">{grupo.grupo}</div>
+
+                {/* Cabeçalho colunas */}
                 <div style={{ display: 'flex', alignItems: 'center', padding: '0.2rem 0.5rem', marginBottom: '0.25rem', gap: '0.5rem' }}>
                   <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Perícia</span>
-                  <span style={{ fontSize: '0.65rem', color: '#c9922a', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 52, textAlign: 'center' }}>Regular</span>
+                  <span style={{ fontSize: '0.65rem', color: '#c9922a', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 56, textAlign: 'center' }}>Regular</span>
                   <span style={{ fontSize: '0.65rem', color: '#3498db', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 44, textAlign: 'center' }}>Difícil</span>
                   <span style={{ fontSize: '0.65rem', color: '#8e44ad', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 44, textAlign: 'center' }}>Extremo</span>
                 </div>
 
                 {grupo.pericias.map(p => {
-                  const val = periciaDisplayVal(p)
+                  const val = periciaVal(p)
                   const isAuto = !!p.calculado
                   return (
-                    <div key={p.key} style={{ display: 'flex', alignItems: 'center', padding: '0.35rem 0.5rem', borderRadius: 6, gap: '0.5rem', transition: 'background 0.12s' }}
+                    <div key={p.key} style={{ display: 'flex', alignItems: 'center', padding: '0.3rem 0.5rem', borderRadius: 6, gap: '0.5rem', transition: 'background 0.12s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-                        {isAuto ? (
-                          <span style={{ fontSize: '0.9rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</span>
-                        ) : (
-                          <>
-                            <button className="stat-ctrl-btn" style={{ width: 20, height: 20, fontSize: '0.75rem', flexShrink: 0 }} onClick={() => nudge(p.key, -1, 0, 99)}>−</button>
-                            <span style={{ fontSize: '0.9rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.label}</span>
-                            <button className="stat-ctrl-btn" style={{ width: 20, height: 20, fontSize: '0.75rem', flexShrink: 0 }} onClick={() => nudge(p.key, +1, 0, 99)}>+</button>
-                          </>
-                        )}
+                      {/* Nome */}
+                      <span style={{ flex: 1, fontSize: '0.88rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.label}
+                        {isAuto && <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginLeft: 4 }}>(auto)</span>}
+                      </span>
+
+                      {/* Regular — editável ou calculado */}
+                      {isAuto ? (
+                        <div style={{ minWidth: 56, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#c9922a', fontStyle: 'italic' }}>{val}%</div>
+                      ) : (
+                        <div style={{ minWidth: 56, display: 'flex', justifyContent: 'center' }}>
+                          <input
+                            type="number"
+                            className="pericia-input"
+                            value={char[p.key] ?? ''}
+                            onChange={e => updateNum(p.key, e.target.value, 0, 99)}
+                            onBlur={() => clampNum(p.key, 0, 99)}
+                          />
+                        </div>
+                      )}
+
+                      {/* Difícil */}
+                      <div style={{ minWidth: 44, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#3498db' }}>
+                        {Math.floor(val / 2)}%
                       </div>
-                      <div style={{ minWidth: 52, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', fontWeight: 500, color: '#c9922a' }}>{val}%</div>
-                      <div style={{ minWidth: 44, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#3498db' }}>{Math.floor(val / 2)}%</div>
-                      <div style={{ minWidth: 44, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#8e44ad' }}>{Math.floor(val / 5)}%</div>
+
+                      {/* Extremo */}
+                      <div style={{ minWidth: 44, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#8e44ad' }}>
+                        {Math.floor(val / 5)}%
+                      </div>
                     </div>
                   )
                 })}

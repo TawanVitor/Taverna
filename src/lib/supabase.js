@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const fallbackUrl = 'https://ffudjrhyemaouqldftza.supabase.co'
+const fallbackAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmdWRqcmh5ZW1hb3VxbGRmdHphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDI3OTQsImV4cCI6MjA5MzkxODc5NH0.cBw-AsK3Q9RrJalGvaXVV3a343BsUquiQBaQZHck-eM'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Faltam as variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env')
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackUrl
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || fallbackAnonKey
 
+export const supabaseConfigError = null
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

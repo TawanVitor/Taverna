@@ -1,30 +1,30 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #121813;
-  --surface:   #011f0f;
-  --surface2:  #251401;
+  --bg:        #0c0a08;
+  --surface:   #181208;
+  --surface2:  #201810;
   --surface3:  #2a2015;
-  --border:    rgba(137, 120, 34, 0.18);
-  --border-md: rgba(109, 85, 48, 0.35);
+  --border:    rgba(180, 130, 55, 0.18);
+  --border-md: rgba(180, 130, 55, 0.35);
   --gold:      #c9922a;
-  --gold-lt:   #bb870d;
+  --gold-lt:   #e8b84b;
   --gold-dk:   #7a5510;
-  --red:       #e3b9bf;
+  --red:       #9b2335;
   --red-lt:    #c0392b;
   --purple:    #5b2d82;
   --purple-lt: #8e44ad;
-  --text:      #caad7c;
+  --text:      #e2d0b0;
   --text-md:   #a08860;
-  --text-dim:  #55472a;
-  --font-display: 'Cinzel';
+  --text-dim:  #5a4a2a;
+  --font-display: 'Cinzel', serif;
   --font-body:    'Crimson Pro', Georgia, serif;
   --font-mono:    'JetBrains Mono', monospace;
   --radius:    8px;
   --radius-lg: 12px;
 }
 
-html { font-size: 18px; }
+html { font-size: 16px; }
 
 body {
   background: var(--bg);
@@ -253,6 +253,44 @@ label {
   text-align: center;
   color: var(--text);
 }
+
+/* Input numérico inline nas fichas */
+.stat-input {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 500;
+  width: 3.5rem;
+  text-align: center;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.2rem 0.25rem;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.stat-input:focus { outline: none; border-color: var(--gold); background: var(--bg); }
+.stat-input::-webkit-outer-spin-button,
+.stat-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* Input numérico menor para pericias e caracteristicas */
+.pericia-input {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: 3rem;
+  text-align: center;
+  color: var(--gold);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.15rem 0.2rem;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.pericia-input:focus { outline: none; border-color: var(--gold); background: var(--bg); }
+.pericia-input::-webkit-outer-spin-button,
+.pericia-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 /* Pericia row */
 .pericia-row {
