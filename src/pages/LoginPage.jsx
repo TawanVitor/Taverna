@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <div style={{
           width: 72, height: 72, borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, #ffd000, #000000)',
+          background: 'radial-gradient(circle at 35% 35%, #ffd000, #923a3a)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 28, margin: '0 auto 1rem',
           boxShadow: '0 0 40px rgba(9, 190, 79, 0.25)',

@@ -1,22 +1,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0c0a08;
-  --surface:   #181208;
-  --surface2:  #201810;
+  --bg:        #181301;
+  --surface:   #071a0f;
+  --surface2:  #181309;
   --surface3:  #2a2015;
   --border:    rgba(180, 130, 55, 0.18);
-  --border-md: rgba(180, 130, 55, 0.35);
-  --gold:      #c9922a;
-  --gold-lt:   #e8b84b;
+  --border-md: rgba(100, 82, 55, 0.35);
+  --gold:      #af8434;
+  --gold-lt:   #b38519;
   --gold-dk:   #7a5510;
   --red:       #9b2335;
   --red-lt:    #c0392b;
   --purple:    #5b2d82;
   --purple-lt: #8e44ad;
-  --text:      #e2d0b0;
-  --text-md:   #a08860;
-  --text-dim:  #5a4a2a;
+  --text:      #e4a32c;
+  --text-md:   #cb8f2b;
+  --text-dim:  #55534e;
   --font-display: 'Cinzel', serif;
   --font-body:    'Crimson Pro', Georgia, serif;
   --font-mono:    'JetBrains Mono', monospace;
