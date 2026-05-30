@@ -276,21 +276,33 @@ label {
 /* Input numérico menor para pericias e caracteristicas */
 .pericia-input {
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  width: 3rem;
+  width: 2.6rem;
+  min-width: 2.6rem;
+  max-width: 2.6rem;
   text-align: center;
   color: var(--gold);
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 5px;
-  padding: 0.15rem 0.2rem;
+  padding: 0.15rem 0.1rem;
   transition: border-color 0.15s;
   -moz-appearance: textfield;
+  flex-shrink: 0;
 }
 .pericia-input:focus { outline: none; border-color: var(--gold); background: var(--bg); }
 .pericia-input::-webkit-outer-spin-button,
 .pericia-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+@media (max-width: 480px) {
+  .pericia-input {
+    width: 2rem;
+    min-width: 2rem;
+    max-width: 2rem;
+    font-size: 0.75rem;
+  }
+}
 
 /* Pericia row */
 .pericia-row {

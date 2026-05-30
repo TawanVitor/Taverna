@@ -117,7 +117,7 @@ export const CHARACTER_DEFAULTS = {
   occupation: '',
   age: 25,
   for_forca: 0,
-  con_constituicao: 0,
+  constituicao: 0,
   tam_tamanho: 0,
   des_destreza: 0,
   apa_aparencia: 0,
