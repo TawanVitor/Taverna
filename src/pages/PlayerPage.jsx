@@ -6,6 +6,16 @@ import {
   CARACTERISTICAS, STATUS, PERICIAS_GRUPOS, CHARACTER_DEFAULTS
 } from '../lib/characterFields'
 
+// Componente do ícone de info com tooltip
+function InfoTooltip({ text }) {
+  return (
+    <span className="info-tooltip-wrap" tabIndex={0}>
+      <img src="/info-icon.png" alt="info" className="info-icon" />
+      <span className="info-tooltip-text">{text}</span>
+    </span>
+  )
+}
+
 export default function PlayerPage({ session, onBack }) {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -43,8 +53,7 @@ export default function PlayerPage({ session, onBack }) {
     setDirty(true)
   }
 
-  // Para inputs numéricos: atualiza ao digitar, clamp ao sair do campo
-  function updateNum(key, raw, min = 0, max = 999) {
+  function updateNum(key, raw) {
     const val = raw === '' ? '' : parseInt(raw)
     setChar(prev => ({ ...prev, [key]: val }))
     setDirty(true)
@@ -69,7 +78,6 @@ export default function PlayerPage({ session, onBack }) {
     if (!char || !dirty) return
     setSaving(true)
     const { id, created_at, ...fields } = char
-    // Garante que todos os campos numéricos são inteiros válidos antes de salvar
     const cleaned = { ...fields }
     Object.keys(cleaned).forEach(k => {
       if (typeof cleaned[k] === 'string' && cleaned[k] !== '' && !isNaN(cleaned[k])) {
@@ -175,7 +183,7 @@ export default function PlayerPage({ session, onBack }) {
                     className="stat-input"
                     style={{ width: '100%', fontSize: '1rem' }}
                     value={char.age ?? ''}
-                    onChange={e => updateNum('age', e.target.value, 1, 120)}
+                    onChange={e => updateNum('age', e.target.value)}
                     onBlur={() => clampNum('age', 1, 120)}
                     min={1} max={120}
                   />
@@ -253,7 +261,7 @@ export default function PlayerPage({ session, onBack }) {
                       type="number"
                       className="stat-input"
                       value={char[`${s.key}_atual`] ?? ''}
-                      onChange={e => updateNum(`${s.key}_atual`, e.target.value, 0, parseInt(char[`${s.key}_max`]) || 999)}
+                      onChange={e => updateNum(`${s.key}_atual`, e.target.value)}
                       onBlur={() => clampNum(`${s.key}_atual`, 0, parseInt(char[`${s.key}_max`]) || 999)}
                     />
                     <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_atual`, +1, 0, parseInt(char[`${s.key}_max`]) || 999)}>+</button>
@@ -267,7 +275,7 @@ export default function PlayerPage({ session, onBack }) {
                       type="number"
                       className="stat-input"
                       value={char[`${s.key}_max`] ?? ''}
-                      onChange={e => updateNum(`${s.key}_max`, e.target.value, 0)}
+                      onChange={e => updateNum(`${s.key}_max`, e.target.value)}
                       onBlur={() => clampNum(`${s.key}_max`, 0)}
                     />
                     <button className="stat-ctrl-btn" onClick={() => nudge(`${s.key}_max`, +1, 0)}>+</button>
@@ -285,14 +293,17 @@ export default function PlayerPage({ session, onBack }) {
             <div className="field-grid">
               {CARACTERISTICAS.map(c => (
                 <div key={c.key}>
-                  <label title={c.full}>{c.label} — {c.full}</label>
+                  <label style={{ display: 'flex', alignItems: 'center' }}>
+                    {c.label}
+                    <InfoTooltip text={c.full} />
+                  </label>
                   <div className="stat-ctrl">
                     <button className="stat-ctrl-btn" onClick={() => nudge(c.key, -1, 0, 99)}>−</button>
                     <input
                       type="number"
                       className="stat-input"
                       value={char[c.key] ?? ''}
-                      onChange={e => updateNum(c.key, e.target.value, 0, 99)}
+                      onChange={e => updateNum(c.key, e.target.value)}
                       onBlur={() => clampNum(c.key, 0, 99)}
                       style={{ color: 'var(--gold-lt)' }}
                     />
@@ -326,50 +337,53 @@ export default function PlayerPage({ session, onBack }) {
               <div key={grupo.grupo} className="card" style={{ marginBottom: '0.75rem' }}>
                 <div className="section-title">{grupo.grupo}</div>
 
-                {/* Cabeçalho colunas */}
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0.2rem 0.5rem', marginBottom: '0.25rem', gap: '0.5rem' }}>
-                  <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Perícia</span>
-                  <span style={{ fontSize: '0.65rem', color: '#c9922a', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 56, textAlign: 'center' }}>Regular</span>
-                  <span style={{ fontSize: '0.65rem', color: '#3498db', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 44, textAlign: 'center' }}>Difícil</span>
-                  <span style={{ fontSize: '0.65rem', color: '#8e44ad', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: 44, textAlign: 'center' }}>Extremo</span>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '0.2rem 0.5rem', marginBottom: '0.25rem', gap: '0.25rem' }}>
+                  <span style={{ flex: 1, fontSize: '0.62rem', color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Perícia</span>
+                  <span style={{ fontSize: '0.62rem', color: '#c9922a', fontFamily: 'var(--font-display)', textTransform: 'uppercase', width: 52, textAlign: 'center', flexShrink: 0 }}>Reg.</span>
+                  <span style={{ fontSize: '0.62rem', color: '#3498db', fontFamily: 'var(--font-display)', textTransform: 'uppercase', width: 42, textAlign: 'center', flexShrink: 0 }}>Dif.</span>
+                  <span style={{ fontSize: '0.62rem', color: '#8e44ad', fontFamily: 'var(--font-display)', textTransform: 'uppercase', width: 42, textAlign: 'center', flexShrink: 0 }}>Ext.</span>
                 </div>
 
                 {grupo.pericias.map(p => {
                   const val = periciaVal(p)
                   const isAuto = !!p.calculado
                   return (
-                    <div key={p.key} style={{ display: 'flex', alignItems: 'center', padding: '0.3rem 0.5rem', borderRadius: 6, gap: '0.5rem', transition: 'background 0.12s' }}
+                    <div
+                      key={p.key}
+                      style={{ display: 'flex', alignItems: 'center', padding: '0.32rem 0.5rem', borderRadius: 6, gap: '0.25rem', transition: 'background 0.12s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
-                      {/* Nome */}
-                      <span style={{ flex: 1, fontSize: '0.88rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{
+                        flex: 1, fontSize: '0.9rem', color: 'var(--text)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        minWidth: 0,
+                      }}>
                         {p.label}
-                        {isAuto && <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginLeft: 4 }}>(auto)</span>}
+                        {isAuto && <span style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginLeft: 3 }}>(auto)</span>}
                       </span>
 
-                      {/* Regular — editável ou calculado */}
                       {isAuto ? (
-                        <div style={{ minWidth: 56, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#c9922a', fontStyle: 'italic' }}>{val}%</div>
+                        <div style={{ width: 52, flexShrink: 0, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.88rem', color: '#c9922a', fontStyle: 'italic' }}>
+                          {val}%
+                        </div>
                       ) : (
-                        <div style={{ minWidth: 56, display: 'flex', justifyContent: 'center' }}>
+                        <div style={{ width: 52, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                           <input
                             type="number"
                             className="pericia-input"
                             value={char[p.key] ?? ''}
-                            onChange={e => updateNum(p.key, e.target.value, 0, 99)}
+                            onChange={e => updateNum(p.key, e.target.value)}
                             onBlur={() => clampNum(p.key, 0, 99)}
                           />
                         </div>
                       )}
 
-                      {/* Difícil */}
-                      <div style={{ minWidth: 44, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#3498db' }}>
+                      <div style={{ width: 42, flexShrink: 0, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#3498db' }}>
                         {Math.floor(val / 2)}%
                       </div>
 
-                      {/* Extremo */}
-                      <div style={{ minWidth: 44, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#8e44ad' }}>
+                      <div style={{ width: 42, flexShrink: 0, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#8e44ad' }}>
                         {Math.floor(val / 5)}%
                       </div>
                     </div>
