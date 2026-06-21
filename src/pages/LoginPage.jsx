@@ -39,18 +39,41 @@ export default function LoginPage() {
       background: 'radial-gradient(ellipse at 50% 30%, #072914 0%, #000000 65%)',
     }}>
       {/* Logo */}
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+      <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
         <div style={{
-          width: 72, height: 72, borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, #ffd000, #923a3a)',
+          width: 65, height: 65,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle at 35% 35%, #e8b84b, #7a5510)',
+          margin: '0 auto 0.2rem',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28, margin: '0 auto 1rem',
-          boxShadow: '0 0 40px rgba(9, 190, 79, 0.25)',
-        }}><img src="PNG.png" alt="logo" style={{ width: '500px', height: '45px', display: 'flex', marginBottom: '-0.2rem', marginRight: '-0.3rem' }} /></div>
-        <h1 style={{ marginBottom: '0.25rem' }}>Cosmos</h1>
- 
-        <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic', }}>
-            Call of Cthulhu 
+          boxShadow: '0 0 40px rgba(200,150,40,0.25)',
+        }}>
+          <img 
+            src="/Cosmos.png" 
+            alt="Cosmos" 
+            style={{ 
+              width: '130%', 
+              height: '100%', 
+              objectFit: 'contain',
+              transform: 'translate(3px, 3px)',
+        }} 
+        />
+        </div>
+
+        <img
+          src="/cosmos-titulo.png"
+          alt="Cosmos"
+          style={{
+            height: 56,
+            width: 'auto',
+            margin: '0 auto 1rem',
+            display: 'block',
+            objectFit: 'contain',
+          }}
+        />
+
+        <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+          Call of Cthulhu
         </p>
       </div>
 
@@ -60,13 +83,13 @@ export default function LoginPage() {
         <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem' }}>
           <button
             className={`tab-btn${mode === 'login' ? ' active' : ''}`}
-            onClick={() => setMode('login')}style={{fontWeight: 'bold'}}
-            
+            onClick={() => setMode('login')}
+            style={{ fontWeight: 'bold' }}
           >Entrar</button>
           <button
             className={`tab-btn${mode === 'register' ? ' active' : ''}`}
             onClick={() => setMode('register')}
-            style={{fontWeight: 'bold'}}
+            style={{ fontWeight: 'bold' }}
           >Criar conta</button>
         </div>
 
@@ -109,12 +132,11 @@ export default function LoginPage() {
             Obrigado pro acessar o Cosmos! Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade.
           </p>
         )}
-        
       </div>
+
       <p style={{ color: 'var(--text-md)', fontSize: '0.9rem', fontStyle: 'italic' }}>
-            pardal ☆ 
-        </p>
+        pardal ☆
+      </p>
     </div>
   )
-  
 }

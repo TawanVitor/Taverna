@@ -133,10 +133,10 @@ export default function LobbyPage({ onEnterSession }) {
   return (
     <div className="app-shell">
       <nav className="topnav">
-        <span className="topnav-title">Cosmos</span>
+        <img src="cosmos-titulo.png" alt="Cosmos" style={{ height: 28, width: 'auto', flex: 1, objectFit: 'contain', objectPosition: 'left' }} />
         <span style={{ fontSize: '0.8rem', color: 'var(--text-md)' }}>{user.email}</span>
-        <button className="btn btn-ghost" style={{ padding: '0.3rem 0.75rem', fontSize: '0.7rem' }} onClick={signOut}>
-          Sair
+        <button className="btn btn-ghost" style={{ padding: '0.4rem' }} onClick={signOut} title="Sair" aria-label="Sair">
+          <img src="/sair.png" alt="Sair" style={{ width: 10, height: 10, filter: 'invert(56%) sepia(54%) saturate(450%) hue-rotate(0deg) brightness(95%)' }} />
         </button>
       </nav>
 
