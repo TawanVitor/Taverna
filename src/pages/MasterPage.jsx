@@ -24,6 +24,10 @@ export default function MasterPage({ session, onBack }) {
   const [newCharIsNpc, setNewCharIsNpc] = useState(false)
   const [creating, setCreating] = useState(false)
 
+  const [editSessionName, setEditSessionName] = useState(session.name)
+  const [editSessionDesc, setEditSessionDesc] = useState(session.description || '')
+  const [savingSession, setSavingSession] = useState(false)
+
   useEffect(() => {
     loadChars()
     const channel = supabase
@@ -90,6 +94,20 @@ export default function MasterPage({ session, onBack }) {
     if (editingChar?.id === id) setEditingChar(null)
     if (selected?.id === id) setSelected(null)
     toast('Ficha removida.')
+  }
+
+  async function saveSession() {
+    setSavingSession(true)
+    const { error } = await supabase
+      .from('sessions')
+      .update({ 
+        name: editSessionName.trim(), 
+        description: editSessionDesc.trim() 
+      })
+      .eq('id', session.id)
+    setSavingSession(false)
+    if (error) { toast('Erro ao salvar', 'error'); return }
+    toast('Campanha atualizada!')
   }
 
   function openEdit(char) {
@@ -297,6 +315,38 @@ export default function MasterPage({ session, onBack }) {
       </nav>
 
       <div className="page">
+
+        {/* Edição da Campanha */}
+        <div className="card" style={{ marginBottom: '1rem', borderColor: 'var(--gold-dk)' }}>
+          <div className="section-title">Configurações da Campanha</div>
+          <div className="grid-2" style={{ gap: '0.75rem', marginBottom: '0.875rem' }}>
+            <div>
+              <label>Nome da Campanha</label>
+              <input 
+                type="text" 
+                value={editSessionName} 
+                onChange={e => setEditSessionName(e.target.value)}
+                placeholder="Nome da campanha..."
+              />
+            </div>
+          </div>
+          <div style={{ marginBottom: '0.875rem' }}>
+            <label>Descrição</label>
+            <textarea 
+              value={editSessionDesc} 
+              onChange={e => setEditSessionDesc(e.target.value)}
+              placeholder="Descrição da campanha (opcional)..."
+              style={{ minHeight: '60px', resize: 'vertical', fontFamily: 'var(--font-body)' }}
+            />
+          </div>
+          <button 
+            className="btn btn-primary" 
+            onClick={saveSession}
+            disabled={savingSession || (editSessionName === session.name && editSessionDesc === (session.description || ''))}
+          >
+            {savingSession ? '...' : 'Salvar Alterações'}
+          </button>
+        </div>
 
         {/* Controles superiores */}
         <div style={{ display: 'flex', gap: 8, marginBottom: '1rem', alignItems: 'center' }}>

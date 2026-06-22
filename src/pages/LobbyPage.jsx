@@ -9,6 +9,8 @@ export default function LobbyPage({ onEnterSession }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [newName, setNewName] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+  const [masterName, setMasterName] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [creating, setCreating] = useState(false)
   const [joining, setJoining] = useState(false)
@@ -62,16 +64,25 @@ export default function LobbyPage({ onEnterSession }) {
   async function createSession(e) {
     e.preventDefault()
     if (!newName.trim()) return
+    if (!masterName.trim()) { toast('Insira seu nome de mestre', 'error'); return }
     setCreating(true)
     const { data, error } = await supabase
       .from('sessions')
-      .insert({ name: newName.trim(), master_id: user.id })
+      .insert({ 
+        name: newName.trim(), 
+        description: newDescription.trim(), 
+        master_id: user.id, 
+        master_email: user.email,
+        master_name: masterName.trim()
+      })
       .select()
       .single()
     setCreating(false)
     if (error) { toast(error.message, 'error'); return }
     toast(`Campanha "${data.name}" criada! Código: ${data.invite_code}`)
     setNewName('')
+    setNewDescription('')
+    setMasterName('')
     loadSessions()
   }
 
@@ -151,40 +162,62 @@ export default function LobbyPage({ onEnterSession }) {
           </div>
         )}
 
-        {sessions.map(s => (
-          <div
-            key={s.id}
-            className="card"
-            style={{ cursor: 'pointer', transition: 'border-color 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-md)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = ''}
-            onClick={() => onEnterSession(s, isMaster(s))}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--gold-lt)' }}>
-                {s.name}
-              </span>
-              <span className={`badge ${isMaster(s) ? 'badge-gold' : 'badge-ghost'}`}>
-                {isMaster(s) ? '👁 Mestre' : '🗡 Jogador'}
-              </span>
+        <div className="sessions-grid">
+          {sessions.map((s, idx) => (
+            <div
+              key={s.id}
+              className={`card session-card ${idx === 0 ? 'session-card-latest' : ''}`}
+              onClick={() => onEnterSession(s, isMaster(s))}
+            >
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', color: 'var(--gold-lt)', marginBottom: '0.5rem', wordBreak: 'break-word', lineHeight: 1.3 }}>
+                  {s.name}
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', marginBottom: '0.4rem' }}>
+                  Mestre: {s.master_name || s.master_email || 'Desconhecido'}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', lineHeight: 1.4, marginBottom: '0.4rem', minHeight: '2.1rem' }}>
+                  {s.description ? (
+                    <span>{s.description}</span>
+                  ) : (
+                    <em style={{ color: 'var(--text-dim)', opacity: 0.6 }}>Sem descrição</em>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
+                  {s.invite_code}
+                </div>
+                <span className={`badge ${isMaster(s) ? 'badge-gold' : 'badge-ghost'}`}>
+                  {isMaster(s) ? '👁' : '🗡'}
+                </span>
+              </div>
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-              Código: {s.invite_code}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
         <div className="divider" style={{ margin: '1.5rem 0' }}>nova campanha</div>
 
         <div className="card">
           <div className="section-title">Criar como mestre</div>
-          <form onSubmit={createSession} style={{ display: 'flex', gap: 8 }}>
+          <form onSubmit={createSession} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Seu nome de mestre..."
+              value={masterName}
+              onChange={e => setMasterName(e.target.value)}
+            />
             <input
               type="text"
               placeholder="Nome da campanha..."
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              style={{ flex: 1 }}
+            />
+            <textarea
+              placeholder="Descrição (opcional)..."
+              value={newDescription}
+              onChange={e => setNewDescription(e.target.value)}
+              style={{ minHeight: '60px', resize: 'vertical', fontFamily: 'var(--font-body)' }}
             />
             <button type="submit" className="btn btn-primary" disabled={creating} style={{ whiteSpace: 'nowrap' }}>
               {creating ? '...' : '+ Criar'}

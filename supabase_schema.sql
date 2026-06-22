@@ -7,6 +7,9 @@ create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   master_id uuid references auth.users(id),
+  master_email text,
+  master_name text,
+  description text,
   invite_code text unique default
     upper(substr(md5(random()::text),1,3)) || '-' || floor(random()*900+100)::text,
   created_at timestamptz default now()

@@ -17,8 +17,8 @@
   --text:      #e4a32c;
   --text-md:   #cb8f2b;
   --text-dim:  #55534e;
-  --font-display: 'Cinzel', serif;
-  --font-body:    'Crimson Pro', Georgia, serif;
+  --font-display: 'Garamond', serif;
+  --font-body:    'Garamond', Georgia, serif;
   --font-mono:    'JetBrains Mono', monospace;
   --radius:    8px;
   --radius-lg: 12px;
@@ -288,6 +288,33 @@ label {
 @media (max-width: 600px) {
   .grid-2 { grid-template-columns: 1fr; }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.session-card {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+  padding: 1rem;
+}
+
+.session-card:hover {
+  border-color: var(--border-md);
+  transform: translateY(-4px);
+}
+
+.session-card-latest {
+  border-color: var(--gold-dk);
+  box-shadow: 0 0 16px rgba(175, 132, 52, 0.35), inset 0 0 12px rgba(175, 132, 52, 0.12);
 }
 
 .spinner {
