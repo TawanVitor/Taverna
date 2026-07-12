@@ -1,7 +1,62 @@
 import { useState, useEffect } from 'react'
+import Marquee from 'react-fast-marquee'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { useToast } from '../components/Toast'
+
+function CampaignTitle({ name }) {
+  const [playing, setPlaying] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
+
+  function handleEnter() {
+    setPlaying(true)
+  }
+
+  function handleLeave() {
+    setPlaying(false)
+    setResetKey(k => k + 1)
+  }
+
+  return (
+    <div
+      style={{ overflow: 'hidden', maxWidth: '100%', marginBottom: '0.5rem' }}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      {playing ? (
+        <Marquee
+          key={resetKey}
+          play={true}
+          speed={35}
+          gradient={false}
+          loop={1}
+        >
+          <span className="session-card-title" style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '0.95rem',
+            color: 'var(--gold-lt)',
+            lineHeight: 1.3,
+            paddingRight: '3rem',
+          }}>
+            {name}
+          </span>
+        </Marquee>
+      ) : (
+        <div className="session-card-title" style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '0.95rem',
+          color: 'var(--gold-lt)',
+          lineHeight: 1.3,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          {name}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function LobbyPage({ onEnterSession }) {
   const { user, signOut } = useAuth()
@@ -146,8 +201,42 @@ export default function LobbyPage({ onEnterSession }) {
       <nav className="topnav">
         <img src="cosmos-titulo.png" alt="Cosmos" style={{ height: 28, width: 'auto', flex: 1, objectFit: 'contain', objectPosition: 'left' }} />
         <span style={{ fontSize: '0.8rem', color: 'var(--text-md)' }}>{user.email}</span>
-        <button className="btn btn-ghost" style={{ padding: '0.4rem' }} onClick={signOut} title="Sair" aria-label="Sair">
-          <img src="/sair.png" alt="Sair" style={{ width: 10, height: 10, filter: 'invert(56%) sepia(54%) saturate(450%) hue-rotate(0deg) brightness(95%)' }} />
+        <button
+          onClick={signOut}
+          title="Sair"
+          aria-label="Sair"
+          style={{
+            minWidth: 20,
+            height: 20,
+            borderRadius: 6,
+            background: 'var(--red)',
+            border: '1px solid var(--red)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+            flexShrink: 0,
+            padding: 0,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--red-lt)'
+            e.currentTarget.style.boxShadow = '0 0 12px rgba(211, 56, 56, 0.7)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'var(--red)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
+        >
+          <img
+            src="/sair.png"
+            alt="Sair"
+            style={{
+              width: 10,
+              height: 10,
+              filter: 'invert(56%) sepia(54%) saturate(450%) hue-rotate(0deg) brightness(95%)',
+            }}
+          />
         </button>
       </nav>
 
@@ -170,9 +259,7 @@ export default function LobbyPage({ onEnterSession }) {
               onClick={() => onEnterSession(s, isMaster(s))}
             >
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', color: 'var(--gold-lt)', marginBottom: '0.5rem', wordBreak: 'break-word', lineHeight: 1.3 }}>
-                  {s.name}
-                </div>
+                <CampaignTitle name={s.name} />
                 <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', marginBottom: '0.4rem' }}>
                   Mestre: {s.master_name || s.master_email || 'Desconhecido'}
                 </div>
@@ -184,11 +271,19 @@ export default function LobbyPage({ onEnterSession }) {
                   )}
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
+              <div className="session-card-footer">
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.72rem',
+                  color: 'var(--text-dim)',
+                  letterSpacing: '0.1em',
+                }}>
                   {s.invite_code}
-                </div>
-                <span className={`badge ${isMaster(s) ? 'badge-gold' : 'badge-ghost'}`}>
+                </span>
+                <span
+                  style={{ fontSize: '0.85rem' }}
+                  title={isMaster(s) ? 'Você é o Mestre' : 'Você é um Jogador'}
+                >
                   {isMaster(s) ? '👁' : '🗡'}
                 </span>
               </div>
@@ -201,18 +296,22 @@ export default function LobbyPage({ onEnterSession }) {
         <div className="card">
           <div className="section-title">Criar como mestre</div>
           <form onSubmit={createSession} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input
-              type="text"
-              placeholder="Seu nome de mestre..."
-              value={masterName}
-              onChange={e => setMasterName(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Nome da campanha..."
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Seu nome de mestre..."
+                value={masterName}
+                onChange={e => setMasterName(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <input
+                type="text"
+                placeholder="Nome da campanha..."
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                style={{ flex: 1 }}
+              />
+            </div>
             <textarea
               placeholder="Descrição (opcional)..."
               value={newDescription}
