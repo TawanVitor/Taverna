@@ -418,7 +418,23 @@ export default function MasterPage({ session, onBack }) {
           </div>
         )}
 
-        {loading && <div className="spinner" />}
+        {loading && (
+          <div className="spinner">
+            <svg className="spinner-eye" width="28" height="18" viewBox="0 0 28 18">
+              <defs>
+                <radialGradient id="irisGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#af8434" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#000" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <path d="M1,9 Q14,-4 27,9 Q14,22 1,9 Z" fill="#0d2216" stroke="#af8434" strokeWidth="1.2" />
+              <circle cx="14" cy="9" r="6" fill="#181301" stroke="#7a5510" strokeWidth="1" />
+              <circle cx="14" cy="9" r="3.2" fill="#000" />
+              <circle cx="14" cy="9" r="3.2" fill="url(#irisGlow)" opacity="0.6" />
+              <circle cx="15.5" cy="7.5" r="1" fill="#e8b84b" opacity="0.7" />
+            </svg>
+          </div>
+        )}
 
         {!loading && chars.length === 0 && (
           <div className="card" style={{ textAlign: 'center', color: 'var(--text-md)', fontStyle: 'italic' }}>

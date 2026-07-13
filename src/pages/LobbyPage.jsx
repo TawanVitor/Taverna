@@ -243,7 +243,23 @@ export default function LobbyPage({ onEnterSession }) {
       <div className="page">
         <h2 style={{ marginBottom: '1.25rem' }}>Suas campanhas</h2>
 
-        {loading && <div className="spinner" />}
+        {loading && (
+          <div className="spinner">
+            <svg className="spinner-eye" width="28" height="18" viewBox="0 0 28 18">
+              <defs>
+                <radialGradient id="irisGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#af8434" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#000" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <path d="M1,9 Q14,-4 27,9 Q14,22 1,9 Z" fill="#0d2216" stroke="#af8434" strokeWidth="1.2" />
+              <circle cx="14" cy="9" r="6" fill="#181301" stroke="#7a5510" strokeWidth="1" />
+              <circle cx="14" cy="9" r="3.2" fill="#000" />
+              <circle cx="14" cy="9" r="3.2" fill="url(#irisGlow)" opacity="0.6" />
+              <circle cx="15.5" cy="7.5" r="1" fill="#e8b84b" opacity="0.7" />
+            </svg>
+          </div>
+        )}
 
         {!loading && sessions.length === 0 && (
           <div className="card" style={{ textAlign: 'center', color: 'var(--text-md)', fontStyle: 'italic' }}>
@@ -294,51 +310,62 @@ export default function LobbyPage({ onEnterSession }) {
         <div className="divider" style={{ margin: '1.5rem 0' }}>nova campanha</div>
 
         <div className="card">
-          <div className="section-title">Criar como mestre</div>
-          <form onSubmit={createSession} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Seu nome de mestre..."
-                value={masterName}
-                onChange={e => setMasterName(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <input
-                type="text"
-                placeholder="Nome da campanha..."
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                style={{ flex: 1 }}
-              />
-            </div>
-            <textarea
-              placeholder="Descrição (opcional)..."
-              value={newDescription}
-              onChange={e => setNewDescription(e.target.value)}
-              style={{ minHeight: '60px', resize: 'vertical', fontFamily: 'var(--font-body)' }}
-            />
-            <button type="submit" className="btn btn-primary" disabled={creating} style={{ whiteSpace: 'nowrap' }}>
-              {creating ? '...' : '+ Criar'}
-            </button>
-          </form>
-        </div>
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
 
-        <div className="card" style={{ marginTop: '1rem' }}>
-          <div className="section-title">Entrar com código</div>
-          <form onSubmit={joinSession} style={{ display: 'flex', gap: 8 }}>
-            <input
-              type="text"
-              placeholder="Ex: ABC-123"
-              value={joinCode}
-              onChange={e => setJoinCode(e.target.value)}
-              style={{ flex: 1, textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}
-              maxLength={7}
-            />
-            <button type="submit" className="btn btn-primary" disabled={joining} style={{ whiteSpace: 'nowrap' }}>
-              {joining ? '...' : 'Entrar'}
-            </button>
-          </form>
+            {/* Criar como mestre */}
+            <div style={{ flex: 2 }}>
+              <div className="section-title">Criar como mestre</div>
+              <form onSubmit={createSession} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="Seu nome de mestre..."
+                    value={masterName}
+                    onChange={e => setMasterName(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Nome da campanha..."
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <textarea
+                  placeholder="Descrição (opcional)..."
+                  value={newDescription}
+                  onChange={e => setNewDescription(e.target.value)}
+                  style={{ resize: 'vertical', minHeight: 60 }}
+                />
+                <button type="submit" className="btn btn-primary" disabled={creating}>
+                  {creating ? '...' : '+ Criar'}
+                </button>
+              </form>
+            </div>
+
+            {/* Divisor vertical */}
+            <div style={{ width: '1px', background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
+
+            {/* Entrar com código */}
+            <div style={{ flex: 1 }}>
+              <div className="section-title">Entrar com código</div>
+              <form onSubmit={joinSession} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input
+                  type="text"
+                  placeholder="Ex: ABC-123"
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value)}
+                  style={{ textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}
+                  maxLength={7}
+                />
+                <button type="submit" className="btn btn-primary" disabled={joining}>
+                  {joining ? '...' : 'Entrar'}
+                </button>
+              </form>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

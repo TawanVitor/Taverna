@@ -28,6 +28,11 @@ html { font-size: 16px; }
 
 body {
   background: var(--bg);
+  background-image: url('/bg.gif');
+  background-size: cover;
+  background-position: center -12px;
+  background-attachment: scroll;
+  background-repeat: repeat-x;
   color: var(--text);
   font-family: var(--font-body);
   min-height: 100vh;
@@ -39,9 +44,22 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 3px; }
 
-.app-shell { min-height: 100vh; display: flex; flex-direction: column; border: none; box-shadow: none; }
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(24, 19, 1, 0.82);
+  border: none;
+  box-shadow: none;
+}
 
 .page { flex: 1; padding: 1.25rem; max-width: 900px; margin: 0 auto; width: 100%; border: none; box-shadow: none; }
+
+@media (max-width: 600px) {
+  .lobby-forms {
+    flex-direction: column;
+  }
+}
 
 h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.06em; }
 h1 { font-size: 1.75rem; color: var(--gold-lt); }
@@ -375,15 +393,56 @@ label {
   box-shadow: 0 8px 20px rgba(175, 132, 52, 0.4);
 }
 
+/* ── Spinner temático — Olho de Cthulhu ── */
 .spinner {
-  width: 32px; height: 32px;
-  border: 2px solid var(--border);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  width: 64px;
+  height: 64px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 2rem auto;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner::before {
+  content: '';
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--gold);
+  border-bottom-color: var(--gold);
+  animation: eyeSpin 1.2s linear infinite;
+}
+
+.spinner::after {
+  content: '';
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-left-color: var(--gold-dk);
+  border-right-color: var(--gold-dk);
+  animation: eyeSpin 0.8s linear infinite reverse;
+}
+
+.spinner-eye {
+  position: absolute;
+  z-index: 2;
+  animation: eyeBlink 3s ease-in-out infinite;
+}
+
+@keyframes eyeSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes eyeBlink {
+  0%, 40%, 100% { transform: scaleY(1); }
+  45%            { transform: scaleY(0.08); }
+  50%            { transform: scaleY(1); }
+}
 
 .pulse-dot { width: 7px; height: 7px; border-radius: 50%; animation: pulse 2s infinite; }
 .pulse-dot.online  { background: #27ae60; }

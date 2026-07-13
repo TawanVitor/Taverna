@@ -120,24 +120,38 @@ export default function PlayerPage({ session, onBack }) {
   }
 
   if (loading) return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ background: '#181301' }}>
       <nav className="topnav">
         <button className="btn btn-ghost" onClick={onBack}>←</button>
         <span className="topnav-title">{session.name}</span>
       </nav>
-      <div className="spinner" />
+      <div className="spinner">
+        <svg className="spinner-eye" width="28" height="18" viewBox="0 0 28 18">
+          <defs>
+            <radialGradient id="irisGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#af8434" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#000" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <path d="M1,9 Q14,-4 27,9 Q14,22 1,9 Z" fill="#0d2216" stroke="#af8434" strokeWidth="1.2" />
+          <circle cx="14" cy="9" r="6" fill="#181301" stroke="#7a5510" strokeWidth="1" />
+          <circle cx="14" cy="9" r="3.2" fill="#000" />
+          <circle cx="14" cy="9" r="3.2" fill="url(#irisGlow)" opacity="0.6" />
+          <circle cx="15.5" cy="7.5" r="1" fill="#e8b84b" opacity="0.7" />
+        </svg>
+      </div>
     </div>
   )
 
   if (!char) return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ background: '#181301' }}>
       <nav className="topnav"><button className="btn btn-ghost" onClick={onBack}>←</button></nav>
       <div className="page" style={{ textAlign: 'center', paddingTop: '3rem', color: 'var(--text-md)' }}>Ficha não encontrada.</div>
     </div>
   )
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ background: '#181301' }}>
       <nav className="topnav">
         <button className="btn btn-ghost" style={{ padding: '0.3rem 0.6rem' }} onClick={onBack}>←</button>
         <span className="topnav-title" style={{ fontSize: '0.75rem' }}>{session.name}</span>
